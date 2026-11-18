@@ -1,0 +1,35 @@
+@data_mining_HostAddress = http://localhost:5217
+
+GET {{data_mining_HostAddress}}/arbol
+Accept: application/json
+
+###
+
+GET {{data_mining_HostAddress}}/evaluacion
+Accept: application/json
+
+###
+
+POST {{data_mining_HostAddress}}/clasificar
+Content-Type: application/json
+Accept: application/json
+
+{
+  "sexo": "mujer",
+  "clase": 3,
+  "edad": 8
+}
+
+###
+
+POST {{data_mining_HostAddress}}/clasificar
+Content-Type: application/json
+Accept: application/json
+
+{
+  "sexo": "mujer",
+  "clase": 3,
+  "edad": 30
+}
+
+###
