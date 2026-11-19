@@ -1,15 +1,25 @@
 using data_mining;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore;
 
-var builder = WebApplication.CreateSlimBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
-    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+    options.SerializerOptions.TypeInfoResolver = AppJsonSerializerContext.Default;
 });
 
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(opciones =>
+{
+    opciones.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Minería de datos — Titanic",
+        Version = "v1",
+        Description = "Árbol de decisión del Titanic, escrito con funciones."
+    });
+});
 
 var app = builder.Build();
 
@@ -21,14 +31,13 @@ if (pasajeros.Count == 0)
 }
 
 var arbol = new ArbolDecision();
-arbol.Entrenar(pasajeros);
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
     app.UseSwaggerUI(opciones =>
     {
-        opciones.SwaggerEndpoint("/openapi/v1.json", "Mineria v1");
+        opciones.SwaggerEndpoint("/swagger/v1/swagger.json", "Mineria v1");
         opciones.DocumentTitle = "Minería de datos — Titanic";
     });
 }
@@ -37,18 +46,13 @@ app.MapGet("/", () => Results.Redirect("/swagger/index.html"))
     .ExcludeFromDescription();
 
 app.MapGet("/arbol", () => new ArbolResponse(
-        "ID3 (ganancia de información)",
-        "Sobrevivio",
-        "niño si edad < 16, adulto si edad >= 16, desconocido si viene vacía",
         pasajeros.Count,
-        arbol.ProfundidadMaxima,
-        ArbolDecision.Atributos,
-        arbol.ATexto(),
-        arbol.ADto()))
+        "niño si edad < 16, adulto si edad >= 16, desconocido si viene vacía",
+        ArbolDecision.Texto))
     .WithName("ObtenerArbol")
     .WithTags("Arbol")
-    .WithSummary("Árbol ID3 entrenado con todos los pasajeros.")
-    .WithDescription("Devuelve el árbol en texto, para leerlo en clase, y la estructura con la entropía y la ganancia de cada pregunta.");
+    .WithSummary("Muestra el árbol de decisión.")
+    .WithDescription("El mismo esquema que está escrito en ArbolDecision: sexo, clase y edad.");
 
 app.MapPost("/clasificar", Results<Ok<ClasificacionResponse>, BadRequest<ErrorResponse>> (ClasificacionRequest solicitud) =>
     {
@@ -57,7 +61,7 @@ app.MapPost("/clasificar", Results<Ok<ClasificacionResponse>, BadRequest<ErrorRe
             return TypedResults.BadRequest(new ErrorResponse(error));
         }
 
-        var resultado = arbol.Predecir(pasajero);
+        var resultado = arbol.Clasificar(pasajero);
         return TypedResults.Ok(new ClasificacionResponse(
             resultado.Clase == 1 ? "sobrevive" : "no sobrevive",
             resultado.Clase,
@@ -68,14 +72,8 @@ app.MapPost("/clasificar", Results<Ok<ClasificacionResponse>, BadRequest<ErrorRe
     })
     .WithName("ClasificarPasajero")
     .WithTags("Arbol")
-    .WithSummary("Predice si un pasajero nuevo sobrevive.")
-    .WithDescription("Recorre el árbol con sexo, clase y edad. Acepta mujer/hombre o female/male.");
-
-app.MapGet("/evaluacion", () => ArbolDecision.Evaluar(pasajeros))
-    .WithName("EvaluarArbol")
-    .WithTags("Arbol")
-    .WithSummary("Aciertos en un 20 % que el árbol no vio al entrenar.")
-    .WithDescription("Baraja los pasajeros con una semilla fija, entrena con el 80 % y mide el porcentaje de acierto en el resto.");
+    .WithSummary("Clasifica a un pasajero con el árbol.")
+    .WithDescription("Recorre las funciones del árbol con sexo, clase y edad. Acepta mujer/hombre o female/male.");
 
 app.Run();
 

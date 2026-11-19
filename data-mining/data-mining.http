@@ -5,11 +5,6 @@ Accept: application/json
 
 ###
 
-GET {{data_mining_HostAddress}}/evaluacion
-Accept: application/json
-
-###
-
 POST {{data_mining_HostAddress}}/clasificar
 Content-Type: application/json
 Accept: application/json

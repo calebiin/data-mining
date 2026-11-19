@@ -1,9 +1,6 @@
 namespace data_mining;
 
-/// <summary>
-/// Un pasajero del Titanic ya preparado para el árbol.
-/// La edad entra como categoría porque ID3 parte por valores discretos.
-/// </summary>
+/// <summary>Un pasajero del Titanic. La edad entra como niño, adulto o desconocido.</summary>
 public sealed class Pasajero
 {
     public const double CorteEdadNino = 16;
@@ -22,16 +19,8 @@ public sealed class Pasajero
 
     public string GrupoEdad { get; }
 
-    /// <summary>1 sobrevive, 0 no sobrevive. Es la clase que el árbol aprende.</summary>
+    /// <summary>1 sobrevive, 0 no sobrevive. Es la etiqueta que trae el CSV.</summary>
     public int Sobrevivio { get; }
-
-    public string ValorDe(string atributo) => atributo switch
-    {
-        "Sexo" => Sexo,
-        "Clase" => Clase.ToString(),
-        "Edad" => GrupoEdad,
-        _ => throw new ArgumentOutOfRangeException(nameof(atributo), atributo, "Atributo desconocido.")
-    };
 
     public static string GrupoPorEdad(double? edad)
     {
